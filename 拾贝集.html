@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词拾贝集</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            background-image: url('微信图片_20250411233053.jpg'); /* 替换为您图片的实际URL */
+            background-size: cover
+            background-repeat: no-repeat; /* 浅绿色背景 */
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 顶部导航栏容器 */
+        .top-nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* 左侧关于我们按钮 */
+        .about-btn {
+            background-color: white;
+            color: #c20c0c;
+            border: 2px solid #c20c0c;
+            border-radius: 30px;
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .about-btn:hover {
+            background-color: #c20c0c;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(194,12,12,0.2);
+        }
+        
+        /* 右侧励志卡片 */
+        .motivation-card {
+            background-color: white;
+            border-radius: 20px;
+            padding: 15px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #c20c0c;
+            position: relative;
+            max-width: 350px;
+        }
+        
+        .motivation-card::after {
+            content: "✨";
+            position: absolute;
+            top: -15px;
+            right: -10px;
+            font-size: 24px;
+        }
+        
+        .motivation-text {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+        }
+        
+        .motivation-title {
+            color: #c20c0c;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* 主导航栏 - 网易风格红色 */
+        .navbar {
+            background-color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-link {
+            color: #c20c0c; /* 网易红 */
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            position: relative;
+            padding: 5px 0;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            color: #a00a0a; /* 深一点的红色 */
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #c20c0c;
+            transition: width 0.3s;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* 标题样式 - 网易红 */
+        .header {
+            padding: 20px 30px;
+        }
+        
+        .site-title {
+            color: #c20c0c;
+            font-size: 32px;
+            font-weight: bold;
+            display: inline-block;
+            position: relative;
+            padding-left: 15px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .site-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 5px;
+            bottom: 5px;
+            width: 5px;
+            background-color: #c20c0c;
+            border-radius: 3px;
+        }
+        
+        /* 轮播图 - 占页面2/3高度 */
+        .slider-container {
+            width: 90%;
+            height: 66vh; /* 页面高度的2/3 */
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .slider-track {
+            display: flex;
+            height: 100%;
+            width: 300%;
+            animation: slide 15s infinite linear;
+        }
+        
+        .slide {
+            width: 33.333%;
+            height: 100%;
+            flex-shrink: 0;
+            position: relative;
+        }
+        
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* 按钮区域 */
+        .button-section {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 20px 0;
+        }
+        
+        /* 可爱圆润按钮 */
+        .word-btn {
+            position: relative;
+            padding: 25px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            min-width: 220px;
+            text-align: center;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        /* 按钮颜色 */
+        .btn-cet4 {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+        }
+        
+        .btn-cet6 {
+            background: linear-gradient(135deg, #43A047, #5CB85C);
+        }
+        
+        .btn-postgrad {
+            background: linear-gradient(135deg, #2E7D32, #4CAF50);
+        }
+        
+        /* 按钮悬停效果 - 绿色变白色 */
+        .word-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            transition: opacity 0.4s;
+            z-index: -1;
+            border-radius: 50px;
+        }
+        
+        .word-btn:hover {
+            color: #2E7D32;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .word-btn:hover::before {
+            opacity: 1;
+        }
+        
+        /* 轮播动画 */
+        @keyframes slide {
+            0% { transform: translateX(0); }
+            33.33% { transform: translateX(0); }
+            66.66% { transform: translateX(-33.333%); }
+            100% { transform: translateX(-66.666%); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .top-nav-container {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .motivation-card {
+                max-width: 100%;
+            }
+            
+            .slider-container {
+                height: 50vh;
+            }
+            
+            .nav-links {
+                gap: 15px;
+            }
+            
+            .nav-link {
+                font-size: 16px;
+            }
+            
+            .site-title {
+                font-size: 28px;
+            }
+            
+            .word-btn {
+                padding: 20px 30px;
+                font-size: 20px;
+                min-width: 180px;
+            }
+            
+            .button-section {
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .slider-container {
+                height: 40vh;
+            }
+            
+            .navbar {
+                padding: 10px 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .nav-links {
+                width: 100%;
+                justify-content: space-around;
+            }
+            
+            .button-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .word-btn {
+                width: 80%;
+            }
+            
+            .about-btn {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+            
+            .motivation-text {
+                font-size: 14px;
+            }
+            
+            .motivation-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏和励志卡片 -->
+    <div class="top-nav-container">
+        <a href="关于我们.html" class="about-btn">
+            <span>关于我们</span>
+        </a>
+        <div class="motivation-card">
+            <div class="motivation-title">
+                <span>单词拾贝集</span>
+            </div>
+            <p class="motivation-text">祝每位旅途人有个光明的未来 ✨</p>
+        </div>
+    </div>
+    
+    <!-- 主导航栏 -->
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="错题集.html" class="nav-link">错题集</a>
+            <a href="登录22.html" class="nav-link">用户</a>
+        </div>
+    </nav>
+    
+    <!-- 标题 -->
+    <div class="header">
+        <h1 class="site-title">单词拾贝集</h1>
+    </div>
+    
+    <!-- 轮播图 -->
+    <div class="slider-container">
+        <div class="slider-track">
+            <div class="slide"><img src="img/OIP-C.jpg" alt="单词示例1"></div>
+            <div class="slide"><img src="img/sunset-3008779_1280.jpg" alt="单词示例2"></div>
+            <div class="slide"><img src="img/v2-c34c61a90095abb8713de9d1dca7ec7b_r.jpg" alt="单词示例3"></div>
+        </div>
+    </div>
+    
+    <!-- 按钮区域 -->
+    <div class="button-section">
+        <a href="cet4.html" class="word-btn btn-cet4">四级单词</a>
+        <a href="cet6.html" class="word-btn btn-cet6">六级单词</a>
+        <a href="考研单词.html" class="word-btn btn-postgrad">考研单词</a>
+    </div>
+</body>
+</html>

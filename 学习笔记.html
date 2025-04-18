@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>橙白学习笔记</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #fff5e6;
+            display: flex;
+            flex-direction: column;
+            padding-top: 80px;
+        }
+
+        /* 抽屉导航样式 */
+        #drawer-toggle {
+            position: fixed;
+            left: 30px;
+            top: 30px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: rgba(255, 107, 107, 0.9);
+            border-radius: 15px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #drawer-menu {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .drawer-open #drawer-menu {
+            left: 0;
+        }
+
+        .menu-item {
+            padding: 18px;
+            margin: 12px 0;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 12px;
+            color: #ff6b6b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 107, 107, 0.2);
+            transform: translateX(10px);
+        }
+
+        /* 笔记容器 */
+        .notes-container {
+            width: 70%;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* 笔记标题 */
+        .notes-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #ff6b6b;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(255, 107, 107, 0.2);
+        }
+
+        /* 笔记编辑器 */
+        .note-editor {
+            width: 100%;
+            min-height: 200px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 3px solid #ff6b6b;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.1);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .note-editor:focus {
+            outline: none;
+            box-shadow: 0 12px 30px rgba(255, 107, 107, 0.2);
+        }
+
+        /* 新增笔记按钮 */
+        .add-note-btn {
+            position: fixed;
+            right: 50px;
+            bottom: 50px;
+            width: 60px;
+            height: 60px;
+            border: none;
+            background: #ff6b6b;
+            border-radius: 50%;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s;
+        }
+
+        .add-note-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            background: #ff4757;
+        }
+    </style>
+</head>
+<body>
+    <!-- 抽屉导航 -->
+    <button id="drawer-toggle">☰</button>
+    <div id="drawer-menu">
+        <div class="menu-item" onclick="location.href='cet4.html'">📖 四级词汇</div>
+        <div class="menu-item" onclick="location.href='cet6.html'">📚 六级词汇</div>
+        <div class="menu-item" onclick="location.href='考研单词.html'">🎓 考研词汇</div>
+        <div class="menu-item" onclick="location.href='拾贝集.html'">🏠 返回首页</div>
+    </div>
+
+    <!-- 笔记容器 -->
+    <div class="notes-container">
+        <h1 class="notes-title">📝 橙白学习笔记</h1>
+        <div id="notes-list"></div>
+    </div>
+
+    <!-- 新增笔记按钮 -->
+    <button class="add-note-btn">+</button>
+
+    <script>
+        // 初始化本地存储
+        let notes = JSON.parse(localStorage.getItem('studyNotes')) || [];
+
+        // 创建新笔记
+        function createNoteElement(content = '', index) {
+            const editor = document.createElement('textarea');
+            editor.className = 'note-editor';
+            editor.value = content;
+            editor.placeholder = '写下你的学习心得...';
+            editor.dataset.index = index;
+            
+            // 实时保存
+            editor.addEventListener('input', (e) => {
+                notes[e.target.dataset.index] = e.target.value;
+                localStorage.setItem('studyNotes', JSON.stringify(notes));
+            });
+
+            return editor;
+        }
+
+        // 渲染笔记
+        function renderNotes() {
+            const container = document.getElementById('notes-list');
+            container.innerHTML = '';
+            notes.forEach((note, index) => {
+                container.appendChild(createNoteElement(note, index));
+            });
+        }
+
+        // 添加新笔记
+        document.querySelector('.add-note-btn').addEventListener('click', () => {
+            notes.push('');
+            localStorage.setItem('studyNotes', JSON.stringify(notes));
+            renderNotes();
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        // 抽屉交互
+        document.getElementById('drawer-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('drawer-open');
+        });
+
+        // 初始化渲染
+        renderNotes();
+    </script>
+</body>
+</html>
