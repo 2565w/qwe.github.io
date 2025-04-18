@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - Error Analysis</title>
+    <style>
+        /* 统一基础样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: url(./img/bg.jpg) no-repeat center/cover;
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            padding-top: 80px;
+        }
+
+        /* 抽屉导航 (Drawer Navigation) */
+        #drawer-toggle {
+            position: fixed;
+            left: 30px;
+            top: 30px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: rgba(156, 39, 176, 0.9);
+            border-radius: 15px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #drawer-menu {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .drawer-open #drawer-menu {
+            left: 0;
+        }
+
+        .menu-item {
+            padding: 18px;
+            margin: 12px 0;
+            background: rgba(156, 39, 176, 0.1);
+            border-radius: 12px;
+            color: #9C27B0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(156, 39, 176, 0.2);
+            transform: translateX(10px);
+        }
+
+        /* 主内容容器 (Main Container) */
+        .main-container {
+            width: 70%;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(156, 39, 176, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #9C27B0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .analysis-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(245, 245, 245, 0.8);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .analysis-item h3 {
+            font-size: 1.4rem;
+            color: #9C27B0;
+            margin-bottom: 10px;
+        }
+
+        .analysis-item p {
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .weak-points {
+            margin-top: 20px;
+        }
+
+        .learning-suggestions {
+            margin-top: 20px;
+        }
+
+        #forgetting-curve-chart {
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- 抽屉导航 (Drawer Navigation) -->
+    <button id="drawer-toggle">☰</button>
+    <div id="drawer-menu">
+        <div class="menu-item" onclick="location.href='cet4.html'">📘 CET-4 四级</div>
+        <div class="menu-item" onclick="location.href='cet6.html'">📗 CET-6 六级</div>
+        <div class="menu-item" onclick="location.href='考研单词.html'">🎓 考研词汇</div>
+        <div class="menu-item" onclick="location.href='错题集.html'">📚 错题集</div>
+        <div class="menu-item" onclick="history.back()">🔙 返回上级</div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-container">
+        <h2 class="section-title">错题集数据分析</h2>
+        <div class="analysis-item">
+            <h3>错题总数</h3>
+            <p id="total-errors"></p>
+        </div>
+        <div class="analysis-item">
+            <h3>各分类错题数量</h3>
+            <p id="category-errors"></p>
+        </div>
+        <div class="analysis-item">
+            <h3>最近错题时间</h3>
+            <p id="latest-error-time"></p>
+        </div>
+        <div class="analysis-item weak-points">
+            <h3>用户薄弱点分析</h3>
+            <p id="weak-points"></p>
+        </div>
+        <div class="analysis-item learning-suggestions">
+            <h3>学习建议</h3>
+            <p id="learning-suggestions"></p>
+        </div>
+        <div class="analysis-item forgetting-curve-suggestions">
+            <h3>遗忘曲线学习建议</h3>
+            <p id="forgetting-curve-advice"></p>
+        </div>
+        <div class="analysis-item">
+            <h3>遗忘曲线图</h3>
+            <canvas id="forgetting-curve-chart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // 渲染数据分析结果
+        function renderAnalysis() {
+            const errors = JSON.parse(localStorage.getItem('errorCollection')) || [];
+            const totalErrorsElem = document.getElementById('total-errors');
+            const categoryErrorsElem = document.getElementById('category-errors');
+            const latestErrorTimeElem = document.getElementById('latest-error-time');
+            const weakPointsElem = document.getElementById('weak-points');
+            const learningSuggestionsElem = document.getElementById('learning-suggestions');
+            const forgettingCurveAdviceElem = document.getElementById('forgetting-curve-advice');
+
+            // 错题总数
+            totalErrorsElem.textContent = `共有 ${errors.length} 道错题`;
+
+            // 各分类错题数量
+            const categoryCount = {};
+            errors.forEach(error => {
+                const category = error.category || '未分类';
+                categoryCount[category] = (categoryCount[category] || 0) + 1;
+            });
+            const categoryList = Object.entries(categoryCount).map(([category, count]) => `${category}: ${count} 道`).join(', ');
+            categoryErrorsElem.textContent = categoryList;
+
+            // 最近错题时间
+            if (errors.length > 0) {
+                const latestError = errors.reduce((prev, current) => {
+                    return new Date(prev.timestamp) > new Date(current.timestamp) ? prev : current;
+                });
+                latestErrorTimeElem.textContent = `最近错题时间: ${new Date(latestError.timestamp).toLocaleString()}`;
+            } else {
+                latestErrorTimeElem.textContent = '暂无错题记录';
+            }
+
+            // 用户薄弱点分析
+            if (Object.keys(categoryCount).length > 0) {
+                const sortedCategories = Object.entries(categoryCount).sort((a, b) => b[1] - a[1]);
+                const weakPoints = sortedCategories.map(([category, count]) => `${category}（${count} 道错题）`).join(', ');
+                weakPointsElem.textContent = `你的薄弱点主要集中在：${weakPoints}。`;
+            } else {
+                weakPointsElem.textContent = '暂无错题记录，继续保持！';
+            }
+
+            // 学习建议
+            if (Object.keys(categoryCount).length > 0) {
+                const topWeakCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0][0];
+                let suggestion = '';
+                if (topWeakCategory === 'CET-4') {
+                    suggestion = '建议你重点复习 CET-4 词汇，多做相关练习题，同时可以结合真题进行模拟训练。';
+                } else if (topWeakCategory === 'CET-6') {
+                    suggestion = '对于 CET-6 词汇，你可以增加阅读英文文章和书籍的量，提高词汇的运用能力。多做听力和写作练习，提升综合能力。';
+                } else if (topWeakCategory === '考研核心') {
+                    suggestion = '针对考研核心词汇，建议制定系统的学习计划，分阶段进行复习。可以结合考研真题和辅导资料，加深对词汇的理解和记忆。';
+                } else {
+                    suggestion = '针对错题较多的分类，你可以集中精力进行专项学习，多做相关练习题，及时总结错题原因。';
+                }
+                learningSuggestionsElem.textContent = suggestion;
+            } else {
+                learningSuggestionsElem.textContent = '继续保持当前的学习状态，不断巩固知识！';
+            }
+
+            // 遗忘曲线学习建议
+            if (errors.length > 0) {
+                const today = new Date();
+                const recentErrors = errors.filter(error => {
+                    const errorDate = new Date(error.timestamp);
+                    const diffTime = Math.abs(today - errorDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 7;
+                });
+
+                let advice = '';
+                if (recentErrors.length > 0) {
+                    const errorCategories = {};
+                    recentErrors.forEach(error => {
+                        const category = error.category;
+                        errorCategories[category] = (errorCategories[category] || 0) + 1;
+                    });
+                    const topCategory = Object.keys(errorCategories).reduce((a, b) => errorCategories[a] > errorCategories[b] ? a : b);
+                    advice = `根据遗忘曲线，今天你可以重点复习 ${topCategory} 类别的错题。对近期错题进行回顾和强化记忆，能有效减少遗忘。`;
+                } else {
+                    advice = '近期没有错题，你可以随机选择一个分类进行复习，巩固知识。';
+                }
+                forgettingCurveAdviceElem.textContent = advice;
+            } else {
+                forgettingCurveAdviceElem.textContent = '暂无错题记录，可先正常学习新内容，后续留意错题积累。';
+            }
+        }
+
+        // 绘制遗忘曲线图
+        function drawForgettingCurve() {
+            const ctx = document.getElementById('forgetting-curve-chart').getContext('2d');
+            const forgettingCurveChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['20分钟', '1小时', '8小时', '1天', '2天', '6天', '31天'],
+                    datasets: [{
+                        label: '遗忘率',
+                        data: [42, 56, 64, 72, 75, 79, 80],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '遗忘率 (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '时间'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 初始化执行
+        renderAnalysis();
+        drawForgettingCurve();
+
+        // 抽屉交互
+        document.getElementById('drawer-toggle').addEventListener('click', () => {
+            document.body.classList.toggle('drawer-open');
+        });
+    </script>
+</body>
+
+</html>    
